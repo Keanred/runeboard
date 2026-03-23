@@ -1,11 +1,15 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-plugin-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
+const tsconfigRootDir = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig([
   globalIgnores(['**/*.js', 'node_modules', 'dist']),
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['src/**/*.ts'],
     plugins: {
       prettier,
     },
@@ -13,6 +17,7 @@ export default defineConfig([
     languageOptions: {
       parserOptions: {
         project: './tsconfig.json',
+        tsconfigRootDir,
         sourceType: 'module',
       },
       globals: {
