@@ -1,0 +1,19 @@
+{
+  "name": "runeboard",
+  "version": "1.0.0",
+  "main": "index.js",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm-run-all --parallel dev:client dev:server",
+    "dev:client": "npm --workspace client run dev",
+    "dev:server": "npm --workspace server run dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
