@@ -1,7 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import helloRouter from './routes/hello';
+import tasksRouter from './routes/tasks';
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -9,7 +9,7 @@ const port = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/hello', helloRouter);
+app.use('/api/tasks', tasksRouter);
 
 const server = http.createServer(app);
 
