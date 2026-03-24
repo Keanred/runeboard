@@ -1,28 +1,28 @@
-import AddIcon from '@mui/icons-material/Add';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { useState } from 'react';
+import { Task } from '../types';
+import { AddTaskForm } from './AddTaskForm';
+import { ColumnHeader } from './ColumnHeader';
+import { TaskCard } from './TaskCard';
 
-export interface ColumnProps {
+export type ColumnProps = {
   /** Column heading text */
   title: string;
-  /** Number shown in the badge next to the title */
-  count: number;
-  /** Show the "+" add button in the header */
+  /** Tasks to render inside the column */
+  tasks: Task[];
+  /** Visual variant applied to every TaskCard in this column */
+  variant?: 'todo' | 'in-progress' | 'done';
+  /** Show the "+" add button in the header and the AddTaskForm at the bottom */
   showAdd?: boolean;
   /** Called when the "+" header button is clicked */
   onAdd?: () => void;
   /** Drop-zone callbacks for drag-and-drop support */
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
-  /** The TaskCard elements (or any children) rendered inside the column */
-  children?: React.ReactNode;
 }
 
-export const Column = ({ title, count, showAdd = false, onAdd, onDragOver, onDrop, children }: ColumnProps) => {
+export const Column = ({ title, tasks, variant = 'todo', showAdd = false, onAdd, onDragOver, onDrop }: ColumnProps) => {
   const [dragOver, setDragOver] = useState(false);
 
   return (
@@ -51,47 +51,7 @@ export const Column = ({ title, count, showAdd = false, onAdd, onDragOver, onDro
         outlineOffset: 4,
       }}
     >
-      {/* Column Header */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 3,
-          px: 0.5,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: '"Manrope", sans-serif',
-              fontWeight: 700,
-              fontSize: '1.125rem',
-              color: 'onSurface.main',
-            }}
-          >
-            {title}
-          </Typography>
-          <Chip
-            label={count}
-            size="small"
-            sx={{
-              height: 20,
-              fontSize: '10px',
-              fontWeight: 700,
-              bgcolor: 'surface.containerHigh',
-              color: 'tertiary.main',
-              '& .MuiChip-label': { px: 1 },
-            }}
-          />
-        </Box>
-        {showAdd && (
-          <IconButton size="small" onClick={onAdd} sx={{ color: 'muted', '&:hover': { color: 'onSurface.main' } }}>
-            <AddIcon fontSize="small" />
-          </IconButton>
-        )}
-      </Box>
+      <ColumnHeader title={title} count={tasks.length} showAdd={showAdd} onAdd={onAdd} />
 
       {/* Task List */}
       <Stack
@@ -102,7 +62,16 @@ export const Column = ({ title, count, showAdd = false, onAdd, onDragOver, onDro
           pr: 1,
         }}
       >
-        {children}
+        {tasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            taskId={task.id}
+            title={task.title}
+            description={task.description}
+            variant={variant}
+          />
+        ))}
+        {showAdd && <AddTaskForm />}
       </Stack>
     </Box>
   );

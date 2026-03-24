@@ -1,17 +1,17 @@
 import { v4 as UUID } from 'uuid';
-import { BOARD_COLUMNS, ColumnData, ColumnId, NewTaskData, TaskData } from './types';
+import { BOARD_COLUMNS, Column, ColumnId, NewTaskData, Task } from './types';
 
-const todoColumn: Map<string, TaskData> = new Map();
-const inProgressColumn: Map<string, TaskData> = new Map();
-const doneColumn: Map<string, TaskData> = new Map();
+const todoColumn: Map<string, Task> = new Map();
+const inProgressColumn: Map<string, Task> = new Map();
+const doneColumn: Map<string, Task> = new Map();
 
-const store: Record<ColumnId, Map<string, TaskData>> = {
+const store: Record<ColumnId, Map<string, Task>> = {
   [ColumnId.TODO]: todoColumn,
   [ColumnId.IN_PROGRESS]: inProgressColumn,
   [ColumnId.DONE]: doneColumn,
 };
 
-export const insertTask = (task: NewTaskData): TaskData => {
+export const insertTask = (task: NewTaskData): Task => {
   const now = new Date().toISOString();
   const createdTask = {
     ...task,
@@ -24,10 +24,10 @@ export const insertTask = (task: NewTaskData): TaskData => {
   return createdTask;
 };
 
-export const updateTask = (taskId: string, updates: Partial<Omit<TaskData, 'id' | 'createdAt' | 'updatedAt'>>): TaskData => {
-  let existingTask: TaskData | undefined;
+export const updateTask = (taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>): Task => {
+  let existingTask: Task | undefined;
   let oldColumnId: ColumnId | undefined;
-  for (const [columnId, column] of Object.entries(store) as [ColumnId, Map<string, TaskData>][]) {
+  for (const [columnId, column] of Object.entries(store) as [ColumnId, Map<string, Task>][]) {
     const found = column.get(taskId);
     if (found) {
       existingTask = found;
@@ -38,7 +38,7 @@ export const updateTask = (taskId: string, updates: Partial<Omit<TaskData, 'id' 
   if (!existingTask || !oldColumnId) {
     throw new Error('Task not found');
   }
-  const updatedTask: TaskData = {
+  const updatedTask: Task = {
     ...existingTask,
     ...updates,
     id: existingTask.id,
@@ -63,15 +63,15 @@ export const deleteTask = (taskId: string) => {
   }
 };
 
-export const getTasksByColumn = (columnId: ColumnId): TaskData[] => {
+export const getTasksByColumn = (columnId: ColumnId): Task[] => {
   return Array.from(store[columnId].values());
 };
 
-export const getColumns = (): ColumnData[] => {
+export const getColumns = (): Column[] => {
   return [...BOARD_COLUMNS];
 };
 
-export const getAllTasks = (): TaskData[] => {
+export const getAllTasks = (): Task[] => {
   return BOARD_COLUMNS.flatMap((column) => Array.from(store[column.id].values()));
 };
 

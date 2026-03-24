@@ -1,10 +1,10 @@
 import { Request, Response, Router } from 'express';
 import { deleteTask, getAllTasks, getColumns, insertTask, updateTask } from '../store';
-import { ColumnData, ColumnId, TaskData } from '../types';
+import { Column, ColumnId, Task } from '../types';
 
 const tasksRouter = Router();
 
-tasksRouter.get('/', (_req: Request, res: Response<{ columns: ColumnData[]; tasks: TaskData[] }>) => {
+tasksRouter.get('/', (_req: Request, res: Response<{ columns: Column[]; tasks: Task[] }>) => {
   return res.json({
     columns: getColumns(),
     tasks: getAllTasks(),
@@ -34,7 +34,7 @@ tasksRouter.patch('/:id', (req: Request<{ id: string }>, res: Response) => {
     return res.status(400).json({ error: 'Task ID is required' });
   }
   const { title, description, columnId, order } = req.body;
-  const updates: Partial<TaskData> = {};
+  const updates: Partial<Task> = {};
   if (title !== undefined) updates.title = title;
   if (description !== undefined) updates.description = description;
   if (columnId !== undefined) updates.columnId = columnId;

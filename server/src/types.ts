@@ -4,13 +4,13 @@ export enum ColumnId {
   DONE = 'DONE',
 }
 
-export type ColumnData = {
+export type Column = {
   id: ColumnId;
   title: 'To Do' | 'In Progress' | 'Done';
   order: 0 | 1 | 2;
 };
 
-export const BOARD_COLUMNS: ColumnData[] = [
+export const BOARD_COLUMNS: Column[] = [
   {
     id: ColumnId.TODO,
     title: 'To Do',
@@ -28,9 +28,9 @@ export const BOARD_COLUMNS: ColumnData[] = [
   },
 ];
 
-export type NewTaskData = Omit<TaskData, 'id' | 'createdAt' | 'updatedAt'>;
+export type NewTaskData = Omit<Task, 'id' | 'createdAt' | 'updatedAt'>;
 
-export type TaskData = {
+export type Task = {
   id: string;
   title: string;
   description: string;

@@ -1,15 +1,14 @@
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
+import { Column } from './Column';
 
-export interface BoardProps {
-  /** Column components (and any trailing elements) rendered in a horizontal flex row */
-  children?: React.ReactNode;
+export type BoardProps = {
   /** Called when the trailing "add column" button is clicked */
   onAddColumn?: () => void;
 }
 
-export const Board = ({ children, onAddColumn }: BoardProps) => {
+export const Board = ({ onAddColumn }: BoardProps) => {
   return (
     <Box
       sx={{
@@ -21,7 +20,9 @@ export const Board = ({ children, onAddColumn }: BoardProps) => {
         overflowX: 'auto',
       }}
     >
-      {children}
+      <Column title="To Do" tasks={[]} variant="todo" showAdd />
+      <Column title="In Progress" tasks={[]} variant="in-progress" />
+      <Column title="Done" tasks={[]} variant="done" />
 
       {/* Add Column Button */}
       <IconButton
