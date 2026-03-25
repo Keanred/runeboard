@@ -5,6 +5,7 @@ import { Task } from '../types';
 import { AddTaskForm } from './AddTaskForm';
 import { ColumnHeader } from './ColumnHeader';
 import { TaskCard } from './TaskCard';
+import { ColumnId } from '../types';
 
 export type ColumnProps = {
   /** Column heading text */
@@ -12,18 +13,29 @@ export type ColumnProps = {
   /** Tasks to render inside the column */
   tasks: Task[];
   /** Visual variant applied to every TaskCard in this column */
-  variant?: 'todo' | 'in-progress' | 'done';
+  variant?: ColumnId;
   /** Show the "+" add button in the header and the AddTaskForm at the bottom */
   showAdd?: boolean;
-  /** Called when the "+" header button is clicked */
-  onAdd?: () => void;
+  /** Called when a task is submitted via the add form */
+  onAdd?: (title: string, description?: string) => void;
+  onMove?: (taskId: string, from: ColumnId, to: ColumnId) => void;
+  onDelete?: (taskId: string) => void;
   /** Drop-zone callbacks for drag-and-drop support */
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
 }
 
-export const Column = ({ title, tasks, variant = 'todo', showAdd = false, onAdd, onDragOver, onDrop }: ColumnProps) => {
+export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false, onAdd, onMove, onDelete, onDragOver, onDrop }: ColumnProps) => {
   const [dragOver, setDragOver] = useState(false);
+
+  const getNextColumnId = (currentColumnId: ColumnId): ColumnId => {
+    const stateTransitions: Record<ColumnId, ColumnId> = {
+      [ColumnId.TODO]: ColumnId.IN_PROGRESS,
+      [ColumnId.IN_PROGRESS]: ColumnId.DONE,
+      [ColumnId.DONE]: ColumnId.TODO,
+    };
+    return stateTransitions[currentColumnId];
+  };
 
   return (
     <Box
@@ -51,7 +63,7 @@ export const Column = ({ title, tasks, variant = 'todo', showAdd = false, onAdd,
         outlineOffset: 4,
       }}
     >
-      <ColumnHeader title={title} count={tasks.length} showAdd={showAdd} onAdd={onAdd} />
+      <ColumnHeader title={title} count={tasks.length} showAdd={showAdd} />
 
       {/* Task List */}
       <Stack
@@ -69,9 +81,11 @@ export const Column = ({ title, tasks, variant = 'todo', showAdd = false, onAdd,
             title={task.title}
             description={task.description}
             variant={variant}
+            onMove={onMove ? () => onMove(task.id, task.columnId, getNextColumnId(task.columnId)) : undefined}
+            onDelete={onDelete}
           />
         ))}
-        {showAdd && <AddTaskForm />}
+        {showAdd && <AddTaskForm onSubmit={onAdd} />}
       </Stack>
     </Box>
   );

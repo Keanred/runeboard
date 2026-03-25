@@ -1,10 +1,13 @@
+import { Delete } from '@mui/icons-material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import { ColumnId } from '../types';
 
 export type TaskCardProps = {
   /** Short identifier displayed at the top of the card */
@@ -12,20 +15,21 @@ export type TaskCardProps = {
   title: string;
   description?: string;
   /** Visual variant controlling border color, opacity, and strikethrough */
-  variant?: 'todo' | 'in-progress' | 'done';
+  variant?: ColumnId;
   /** Called when the user clicks the "Move" button */
   onMove?: () => void;
+  onDelete?: (taskId: string) => void;
   /** Native drag-start forwarding */
   onDragStart?: (e: React.DragEvent) => void;
 }
 
-export const TaskCard = ({ taskId, title, description, variant = 'todo', onMove, onDragStart }: TaskCardProps) => {
-  const isDone = variant === 'done';
+export const TaskCard = ({ taskId, title, description, variant = ColumnId.TODO, onMove, onDelete, onDragStart }: TaskCardProps) => {
+  const isDone = variant === ColumnId.DONE;
 
-  const borderColorMap: Record<string, string> = {
-    done: 'success.main',
-    'in-progress': 'tertiary.main',
-    todo: 'primary.main',
+  const borderColorMap: Record<ColumnId, string> = {
+    [ColumnId.DONE]: 'success.main',
+    [ColumnId.IN_PROGRESS]: 'tertiary.main',
+    [ColumnId.TODO]: 'primary.main',
   };
   const borderColor = borderColorMap[variant];
 
@@ -52,8 +56,17 @@ export const TaskCard = ({ taskId, title, description, variant = 'todo', onMove,
           opacity: 0,
           transition: 'opacity 0.2s',
         },
+        '& .delete-button': {
+          opacity: 0,
+          pointerEvents: 'none',
+          transition: 'opacity 0.2s, color 0.2s',
+        },
         '&:hover .drag-indicator': {
           opacity: isDone ? 0 : 1,
+        },
+        '&:hover .delete-button': {
+          opacity: isDone ? 0 : 1,
+          pointerEvents: isDone ? 'none' : 'auto',
         },
       }}
     >
@@ -76,6 +89,31 @@ export const TaskCard = ({ taskId, title, description, variant = 'todo', onMove,
           ) : (
             <DragIndicatorIcon className="drag-indicator" sx={{ fontSize: '1rem', color: 'muted' }} />
           )}
+          <IconButton
+            className="delete-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.(taskId);
+            }}
+            disabled={isDone}
+            size="small"
+            sx={{
+              padding: 0,
+              minWidth: 0,
+              '& svg': {
+                fontSize: '1rem',
+              },
+            }}
+          >
+            <Delete
+              sx={{
+                color: 'muted',
+                '&:hover': {
+                  color: 'error.main',
+                },
+              }}
+            />
+          </IconButton>
         </Box>
 
         {/* Title */}

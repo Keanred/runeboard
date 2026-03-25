@@ -6,28 +6,15 @@ import { useState } from 'react';
 
 export type AddTaskFormProps = {
   /** Called when the form is submitted with the task title */
-  onSubmit?: (title: string) => void;
+  onSubmit?: (title: string, description?: string) => void;
   /** Called when the form is cancelled */
   onCancel?: () => void;
 }
 
-export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
+export const AddTaskForm = ({ onSubmit: onSubmit, onCancel: _onCancel }: AddTaskFormProps) => {
   const [formOpen, setFormOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
-
-  const handleSubmit = () => {
-    if (taskTitle.trim()) {
-      onSubmit?.(taskTitle);
-      setTaskTitle('');
-      setFormOpen(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setTaskTitle('');
-    setFormOpen(false);
-    onCancel?.();
-  };
+  const [taskDescription, setTaskDescription] = useState('');
 
   if (!formOpen) {
     return (
@@ -72,14 +59,6 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
         placeholder="Enter task title..."
         value={taskTitle}
         onChange={(e) => setTaskTitle(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSubmit();
-          } else if (e.key === 'Escape') {
-            handleCancel();
-          }
-        }}
         variant="standard"
         sx={{
           mb: 2,
@@ -95,12 +74,37 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
           },
         }}
       />
+      <TextField
+        fullWidth
+        multiline
+        placeholder="Enter task description (optional)..."
+        value={taskDescription}
+        onChange={(e) => setTaskDescription(e.target.value)}
+        variant="standard"
+        sx={{
+          mb: 2,
+          '& .MuiInput-root': {
+            color: 'onSurface.variant',
+            fontSize: '0.75rem',
+          },
+          '& .MuiInput-underline:before': {
+            borderBottomColor: 'rgba(189, 147, 249, 0.2)',
+          },
+          '& .MuiInput-underline:hover:before': {
+            borderBottomColor: 'rgba(189, 147, 249, 0.4)',
+          },
+        }}
+      />
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Button
           size="small"
           variant="contained"
-          onClick={handleSubmit}
-          disabled={!taskTitle.trim()}
+          onClick={() => {
+            onSubmit?.(taskTitle, taskDescription);
+            setTaskTitle('');
+            setTaskDescription('');
+            setFormOpen(false);
+          }}
           sx={{
             flex: 1,
             textTransform: 'none',
@@ -113,7 +117,11 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
         <Button
           size="small"
           variant="text"
-          onClick={handleCancel}
+          onClick={() => {
+            setTaskTitle('');
+            setTaskDescription('');
+            setFormOpen(false);
+          }}
           sx={{
             flex: 1,
             textTransform: 'none',
