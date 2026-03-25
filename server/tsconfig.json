@@ -10,7 +10,10 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noEmitOnError": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@runeboard/schemas": ["../schemas/src/index.ts"]
+    }
   },
   "include": [
     "src/**/*.ts"

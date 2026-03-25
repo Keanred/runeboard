@@ -1,13 +1,17 @@
 import { Request, Response, Router } from 'express';
 import { deleteTask, getAllTasks, getColumns, insertTask, updateTask } from '../store';
-import { Column, ColumnId, Task } from '../types';
+import { Column, Task, createTaskSchema } from '@runeboard/schemas';
+
+import { ColumnId } from '../types';
 
 const tasksRouter = Router();
 
 tasksRouter.get('/', (_req: Request, res: Response<{ columns: Column[]; tasks: Task[] }>) => {
+  const columns: Column[] = getColumns();
+  const tasks: Task[] = getAllTasks();
   return res.json({
-    columns: getColumns(),
-    tasks: getAllTasks(),
+    columns,
+    tasks,
   });
 });
 
@@ -15,13 +19,11 @@ tasksRouter.post('/', (req: Request, res: Response) => {
   if (!req.body.title) {
     return res.status(400).json({ error: 'Title is required' });
   }
-  const newTask = {
-    title: req.body.title,
-    description: req.body.description || '',
-    columnId: ColumnId.TODO,
-    order: 0,
-  };
-  const result = insertTask(newTask);
+  const newTask = createTaskSchema.safeParse(req.body);
+  if (!newTask.success) {
+    return res.status(400).json({ error: 'Invalid task data', details: newTask.error });
+  }
+  const result: Task = insertTask(newTask.data);
   if (!result) {
     return res.status(400).json({ error: 'Failed to create task' });
   }

@@ -1,4 +1,4 @@
-import { Task, Column } from './types';
+import type { Task, Column } from '@runeboard/schemas';
 
 export const getTasks = async (): Promise<{ columns: Column[], tasks: Task[] }>  => {
   const response = await fetch('/api/tasks');

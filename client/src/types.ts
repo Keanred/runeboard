@@ -1,24 +1,5 @@
-export enum ColumnId {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  DONE = 'DONE',
-}
-
-export type Column = {
-  id: ColumnId;
-  title: 'To Do' | 'In Progress' | 'Done';
-  order: 0 | 1 | 2;
-};
-
-export type Task = {
-  id: string;
-  title: string;
-  description: string;
-  columnId: ColumnId;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
-};
+export { ColumnId } from '@runeboard/schemas';
+export type { Column, Task } from '@runeboard/schemas';
 
 export type NavItem = {
   label: string;
@@ -26,3 +7,4 @@ export type NavItem = {
   href: string;
   active?: boolean;
 }
+

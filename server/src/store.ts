@@ -1,5 +1,6 @@
 import { v4 as UUID } from 'uuid';
-import { BOARD_COLUMNS, Column, ColumnId, NewTaskData, Task } from './types';
+import { BOARD_COLUMNS, ColumnId, NewTaskData } from './types';
+import { CreateTaskInput, UpdateTaskInput, Task, Column } from '@runeboard/schemas';
 
 const todoColumn: Map<string, Task> = new Map();
 const inProgressColumn: Map<string, Task> = new Map();
@@ -11,20 +12,20 @@ const store: Record<ColumnId, Map<string, Task>> = {
   [ColumnId.DONE]: doneColumn,
 };
 
-export const insertTask = (task: NewTaskData): Task => {
+export const insertTask = (task: CreateTaskInput): Task => {
   const now = new Date().toISOString();
   const createdTask = {
     ...task,
     id: UUID(),
-    createdAt: now,
-    updatedAt: now,
+    createdAt: Date.now().toString(),
+    updatedAt: Date.now().toString(),
   };
   store[createdTask.columnId].set(createdTask.id, createdTask);
 
   return createdTask;
 };
 
-export const updateTask = (taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>): Task => {
+export const updateTask = (taskId: string, updates: UpdateTaskInput): Task => {
   let existingTask: Task | undefined;
   let oldColumnId: ColumnId | undefined;
   for (const [columnId, column] of Object.entries(store) as [ColumnId, Map<string, Task>][]) {
