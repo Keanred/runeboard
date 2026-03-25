@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import { useState } from 'react';
+import { useState, DragEvent } from 'react';
 import { Task } from '../types';
 import { AddTaskForm } from './AddTaskForm';
 import { ColumnHeader } from './ColumnHeader';
@@ -21,11 +21,12 @@ export type ColumnProps = {
   onMove?: (taskId: string, from: ColumnId, to: ColumnId) => void;
   onDelete?: (taskId: string) => void;
   /** Drop-zone callbacks for drag-and-drop support */
-  onDragOver?: (e: React.DragEvent) => void;
-  onDrop?: (e: React.DragEvent) => void;
+  onDragStart?: (taskId: string, fromColumnId: ColumnId, e: DragEvent) => void;
+  onDragOver?: (e: DragEvent) => void;
+  onDrop?: (e: DragEvent) => void;
 }
 
-export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false, onAdd, onMove, onDelete, onDragOver, onDrop }: ColumnProps) => {
+export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false, onAdd, onMove, onDelete, onDragStart, onDragOver, onDrop }: ColumnProps) => {
   const [dragOver, setDragOver] = useState(false);
 
   const getNextColumnId = (currentColumnId: ColumnId): ColumnId => {
@@ -83,6 +84,7 @@ export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false,
             variant={variant}
             onMove={onMove ? () => onMove(task.id, task.columnId, getNextColumnId(task.columnId)) : undefined}
             onDelete={onDelete}
+            onDragStart={onDragStart ? (e) => onDragStart(task.id, task.columnId, e) : undefined}
           />
         ))}
         {showAdd && <AddTaskForm onSubmit={onAdd} />}

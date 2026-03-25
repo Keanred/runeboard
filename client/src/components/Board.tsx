@@ -6,7 +6,7 @@ import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
 import { Column } from './Column';
 import { createTask, deleteTask, getTasks, updateTask } from '../api';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, DragEvent } from 'react';
 
 export type BoardProps = {
   /** Called when the trailing "add column" button is clicked */
@@ -18,6 +18,13 @@ type SortedColumn = {
   title: string;
   tasks: Task[];
 }
+type TaskDrag = {
+  taskId: string;
+  fromColumnId: ColumnId;
+}
+
+const DRAG_MIME_TYPE = 'application/x-runeboard-task';
+
 export const Board = ({ onAddColumn }: BoardProps) => {
   const [taskColumns, setTaskColumns] = useState<SortedColumn[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +103,24 @@ export const Board = ({ onAddColumn }: BoardProps) => {
     }
   };
 
+  const dragHandler = (taskId: string, fromColumnId: ColumnId, e: DragEvent) => {
+    const payload: TaskDrag = { taskId, fromColumnId };
+    e.dataTransfer.setData(DRAG_MIME_TYPE, JSON.stringify(payload));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDropToColumn = (toColumnId: ColumnId, e: DragEvent) => {
+    const raw = e.dataTransfer.getData(DRAG_MIME_TYPE);
+    if (!raw) return;
+    try {
+      const payload = JSON.parse(raw) as TaskDrag;
+      if (!payload.taskId || payload.fromColumnId === toColumnId) return;
+      void handleMoveTask(payload.taskId, payload.fromColumnId, toColumnId);
+    } catch {
+      setError('Invalid drag data. Please try again.');
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -116,6 +141,8 @@ export const Board = ({ onAddColumn }: BoardProps) => {
             variant={col.id}
             showAdd={col.id === ColumnId.TODO ? true : false}
             onAdd={(title: string, description?: string) => handleAddTask(title, description)}
+            onDragStart={dragHandler}
+            onDrop={(e) => handleDropToColumn(col.id, e)}
             onMove={handleMoveTask}
             onDelete={handleDeleteTask}
           />

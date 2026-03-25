@@ -35,7 +35,7 @@ export const TaskCard = ({ taskId, title, description, variant = ColumnId.TODO, 
 
   return (
     <Card
-      draggable={!isDone}
+      draggable
       onDragStart={onDragStart}
       sx={{
         bgcolor: isDone ? 'rgba(39, 41, 53, 0.6)' : 'surface.containerHigh',
@@ -43,14 +43,14 @@ export const TaskCard = ({ taskId, title, description, variant = ColumnId.TODO, 
         borderColor,
         borderRadius: 3,
         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
-        cursor: isDone ? 'default' : 'grab',
+        cursor: 'grab',
         opacity: isDone ? 0.7 : 1,
         transition: 'all 0.2s',
         '&:hover': {
           bgcolor: 'surface.bright',
         },
         '&:active': {
-          cursor: isDone ? 'default' : 'grabbing',
+          cursor: 'grabbing',
         },
         '& .drag-indicator': {
           opacity: 0,
