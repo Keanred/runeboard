@@ -109,7 +109,7 @@ export const Board = ({ onAddColumn }: BoardProps) => {
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDropToColumn = (toColumnId: ColumnId, e: DragEvent) => {
+  const handleDropToColumn = async (toColumnId: ColumnId, e: DragEvent) => {
     const raw = e.dataTransfer.getData(DRAG_MIME_TYPE);
     if (!raw) return;
     try {
@@ -117,6 +117,7 @@ export const Board = ({ onAddColumn }: BoardProps) => {
       if (!payload.taskId || payload.fromColumnId === toColumnId) return;
       void handleMoveTask(payload.taskId, payload.fromColumnId, toColumnId);
     } catch {
+      await loadBoard();
       setError('Invalid drag data. Please try again.');
     }
   };
