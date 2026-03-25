@@ -1,7 +1,9 @@
 import * as z from 'zod';
 
-export const ColumnIdSchema = z.enum(['TODO', 'IN_PROGRESS', 'DONE']);
-const Order = z.number().int().nonnegative().lte(3);
+export const LEGACY_COLUMN_IDS = ['TODO', 'IN_PROGRESS', 'DONE'] as const;
+export const LegacyColumnIdSchema = z.enum(LEGACY_COLUMN_IDS);
+export const ColumnIdSchema = z.string().min(1);
+const Order = z.number().int().nonnegative();
 
 export const TaskSchema = z.object({
   id: z.string(),
@@ -15,7 +17,7 @@ export const TaskSchema = z.object({
 
 export const ColumnSchema = z.object({
   id: ColumnIdSchema,
-  title: z.enum(['To Do', 'In Progress', 'Done']),
+  title: z.string().min(1),
   order: Order,
 });
 
@@ -39,8 +41,13 @@ export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 
 // Matches TypeScript enum usage (ColumnId.TODO, ColumnId.IN_PROGRESS, etc.)
-export const ColumnId = ColumnIdSchema.enum;
+export const ColumnId = {
+  TODO: 'TODO',
+  IN_PROGRESS: 'IN_PROGRESS',
+  DONE: 'DONE',
+} as const;
 export type ColumnId = z.infer<typeof ColumnIdSchema>;
+export type LegacyColumnId = z.infer<typeof LegacyColumnIdSchema>;
 
 export const BOARD_COLUMNS: Column[] = [
   { id: ColumnId.TODO, title: 'To Do', order: 0 },

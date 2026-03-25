@@ -12,6 +12,13 @@ const store: Record<ColumnId, Map<string, Task>> = {
   [ColumnId.DONE]: doneColumn,
 };
 
+const ensureColumnStore = (columnId: ColumnId): Map<string, Task> => {
+  if (!store[columnId]) {
+    store[columnId] = new Map();
+  }
+  return store[columnId];
+};
+
 export const insertTask = (task: CreateTaskInput): Task => {
   const now = new Date().toISOString();
   const createdTask = {
@@ -20,7 +27,7 @@ export const insertTask = (task: CreateTaskInput): Task => {
     createdAt: Date.now().toString(),
     updatedAt: Date.now().toString(),
   };
-  store[createdTask.columnId].set(createdTask.id, createdTask);
+  ensureColumnStore(createdTask.columnId).set(createdTask.id, createdTask);
 
   return createdTask;
 };
@@ -49,7 +56,7 @@ export const updateTask = (taskId: string, updates: UpdateTaskInput): Task => {
   if (updates.columnId && updates.columnId !== oldColumnId) {
     store[oldColumnId].delete(taskId);
   }
-  store[updatedTask.columnId].set(taskId, updatedTask);
+  ensureColumnStore(updatedTask.columnId).set(taskId, updatedTask);
   return updatedTask;
 };
 
@@ -65,7 +72,7 @@ export const deleteTask = (taskId: string) => {
 };
 
 export const getTasksByColumn = (columnId: ColumnId): Task[] => {
-  return Array.from(store[columnId].values());
+  return Array.from(ensureColumnStore(columnId).values());
 };
 
 export const getColumns = (): Column[] => {
@@ -73,7 +80,7 @@ export const getColumns = (): Column[] => {
 };
 
 export const getAllTasks = (): Task[] => {
-  return BOARD_COLUMNS.flatMap((column) => Array.from(store[column.id].values()));
+  return BOARD_COLUMNS.flatMap((column) => Array.from(ensureColumnStore(column.id).values()));
 };
 
 const seedTasks: NewTaskData[] = [

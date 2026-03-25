@@ -30,12 +30,12 @@ export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false,
   const [dragOver, setDragOver] = useState(false);
 
   const getNextColumnId = (currentColumnId: ColumnId): ColumnId => {
-    const stateTransitions: Record<ColumnId, ColumnId> = {
+    const stateTransitions: Record<string, ColumnId> = {
       [ColumnId.TODO]: ColumnId.IN_PROGRESS,
       [ColumnId.IN_PROGRESS]: ColumnId.DONE,
       [ColumnId.DONE]: ColumnId.TODO,
     };
-    return stateTransitions[currentColumnId];
+    return stateTransitions[currentColumnId] ?? currentColumnId;
   };
 
   return (

@@ -26,12 +26,12 @@ export type TaskCardProps = {
 export const TaskCard = ({ taskId, title, description, variant = ColumnId.TODO, onMove, onDelete, onDragStart }: TaskCardProps) => {
   const isDone = variant === ColumnId.DONE;
 
-  const borderColorMap: Record<ColumnId, string> = {
+  const borderColorMap: Record<string, string> = {
     [ColumnId.DONE]: 'success.main',
     [ColumnId.IN_PROGRESS]: 'tertiary.main',
     [ColumnId.TODO]: 'primary.main',
   };
-  const borderColor = borderColorMap[variant];
+  const borderColor = borderColorMap[variant] ?? 'primary.main';
 
   return (
     <Card

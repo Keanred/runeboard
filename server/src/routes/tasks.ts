@@ -23,6 +23,9 @@ tasksRouter.post('/', (req: Request, res: Response) => {
   if (!newTask.success) {
     return res.status(400).json({ error: 'Invalid task data', details: newTask.error });
   }
+  if (!getColumns().some((col) => col.id === newTask.data.columnId)) {
+    return res.status(400).json({ error: 'Invalid columnId' });
+  }
   const result: Task = insertTask(newTask.data);
   if (!result) {
     return res.status(400).json({ error: 'Failed to create task' });
