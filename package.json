@@ -10,9 +10,12 @@
   "scripts": {
     "test": "npm run test --workspaces --if-present",
     "test:watch": "npm run test:watch --workspaces --if-present",
-    "dev": "npm-run-all --parallel dev:client dev:server",
+    "dev": "npm-run-all dev:db-up dev:db-init --parallel dev:client dev:server",
+    "dev:db-up": "docker compose up -d postgres",
+    "dev:db-init": "npm --workspace server run db:migrate:dev && npm --workspace server run db:seed",
     "dev:client": "npm --workspace client run dev",
-    "dev:server": "npm --workspace server run dev"
+    "dev:server": "npm --workspace server run dev",
+    "dev:down": "docker compose stop postgres"
   },
   "keywords": [],
   "author": "",
