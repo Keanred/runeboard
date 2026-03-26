@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { deleteTask, getAllTasks, getColumns, insertTask, updateTask } from '../store';
-import { Column, Task, createTaskSchema } from '@runeboard/schemas';
+import { Column, Task, createTaskSchema, updateTaskSchema } from '@runeboard/schemas';
 
 import { ColumnId } from '../types';
 
@@ -15,10 +15,7 @@ tasksRouter.get('/', (_req: Request, res: Response<{ columns: Column[]; tasks: T
   });
 });
 
-tasksRouter.post('/', (req: Request, res: Response) => {
-  if (!req.body.title) {
-    return res.status(400).json({ error: 'Title is required' });
-  }
+tasksRouter.post('/', async (req: Request, res: Response) => {
   const newTask = createTaskSchema.safeParse(req.body);
   if (!newTask.success) {
     const message = newTask.error.issues.map((i) => i.message).join(', ');
@@ -27,7 +24,7 @@ tasksRouter.post('/', (req: Request, res: Response) => {
   if (!getColumns().some((col) => col.id === newTask.data.columnId)) {
     return res.status(400).json({ error: 'Invalid columnId' });
   }
-  const result: Task = insertTask(newTask.data);
+  const result: Task = await insertTask(newTask.data);
   if (!result) {
     return res.status(400).json({ error: 'Failed to create task' });
   }
@@ -39,12 +36,14 @@ tasksRouter.patch('/:id', (req: Request<{ id: string }>, res: Response) => {
   if (!id) {
     return res.status(400).json({ error: 'Task ID is required' });
   }
-  const { title, description, columnId, order } = req.body;
-  const updates: Partial<Task> = {};
-  if (title !== undefined) updates.title = title;
-  if (description !== undefined) updates.description = description;
-  if (columnId !== undefined) updates.columnId = columnId;
-  if (order !== undefined) updates.order = order;
+
+  const parsedUpdates = updateTaskSchema.safeParse(req.body);
+  if (!parsedUpdates.success) {
+    const message = parsedUpdates.error.issues.map((i) => i.message).join(', ');
+    return res.status(400).json({ error: `Invalid task data: ${message}` });
+  }
+  const updates = parsedUpdates.data;
+  const { columnId } = updates;
 
   if (columnId && !getColumns().some((col) => col.id === columnId)) {
     return res.status(400).json({ error: 'Invalid columnId' });

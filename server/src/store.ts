@@ -1,6 +1,8 @@
 import { v4 as UUID } from 'uuid';
 import { BOARD_COLUMNS, ColumnId, NewTaskData } from './types';
 import { CreateTaskInput, UpdateTaskInput, Task, Column } from '@runeboard/schemas';
+import { db } from './db/client';
+import { InsertTask, tasks } from './db/schema';
 
 const todoColumn: Map<string, Task> = new Map();
 const inProgressColumn: Map<string, Task> = new Map();
@@ -19,17 +21,34 @@ const ensureColumnStore = (columnId: ColumnId): Map<string, Task> => {
   return store[columnId];
 };
 
-export const insertTask = (task: CreateTaskInput): Task => {
-  const now = new Date().toISOString();
-  const createdTask = {
+export const insertTask = async (taskData: CreateTaskInput): Promise<Task> => {
+  const task = taskData;
+  const newTask: InsertTask = {
+    id: UUID(),
+    title: task.title,
+    description: task.description,
+    columnId: task.columnId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  const [createdTask] = await db.insert(tasks).values({
     ...task,
     id: UUID(),
-    createdAt: Date.now().toString(),
-    updatedAt: Date.now().toString(),
-  };
-  ensureColumnStore(createdTask.columnId).set(createdTask.id, createdTask);
+    title: task.title,
+    description: task.description,
+    columnId: task.columnId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }).returning();
 
-  return createdTask;
+  const normalizedTask: Task = {
+    ...createdTask,
+    description: createdTask.description ?? undefined,
+  };
+
+  ensureColumnStore(normalizedTask.columnId).set(normalizedTask.id, normalizedTask);
+
+  return normalizedTask;
 };
 
 export const updateTask = (taskId: string, updates: UpdateTaskInput): Task => {

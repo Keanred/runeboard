@@ -2,17 +2,20 @@ import * as z from 'zod';
 
 export const LEGACY_COLUMN_IDS = ['TODO', 'IN_PROGRESS', 'DONE'] as const;
 export const LegacyColumnIdSchema = z.enum(LEGACY_COLUMN_IDS);
-export const ColumnIdSchema = z.string().min(1);
+export const ColumnIdSchema = z.string().trim().min(1).max(100);
 const Order = z.number().int().nonnegative();
+const TimestampSchema = z.string().datetime({ offset: true });
+const TaskTitleSchema = z.string().trim().min(1).max(200);
+const TaskDescriptionSchema = z.string().trim().min(1).max(4000);
 
 export const TaskSchema = z.object({
   id: z.string(),
-  title: z.string(),
-  description: z.string().optional(),
+  title: TaskTitleSchema,
+  description: TaskDescriptionSchema.optional(),
   columnId: ColumnIdSchema,
-  order: z.number(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  order: Order,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
 });
 
 export const ColumnSchema = z.object({
@@ -22,17 +25,17 @@ export const ColumnSchema = z.object({
 });
 
 export const createTaskSchema = z.object({
-  title: z.string(),
-  description: z.string().optional(),
+  title: TaskTitleSchema,
+  description: TaskDescriptionSchema.optional(),
   columnId: ColumnIdSchema.default('TODO'),
-  order: z.number().default(0),
+  order: Order.default(0),
 });
 
 export const updateTaskSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
+  title: TaskTitleSchema.optional(),
+  description: TaskDescriptionSchema.optional(),
   columnId: ColumnIdSchema.optional(),
-  order: z.number().optional(),
+  order: Order.optional(),
 });
 
 export type Task = z.infer<typeof TaskSchema>;

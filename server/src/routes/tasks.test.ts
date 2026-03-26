@@ -25,7 +25,7 @@ describe('tasks routes', () => {
     const res = await request(app).post('/api/tasks').send({ description: 'No title' });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Title is required');
+    expect(res.body.error).toContain('Invalid task data');
   });
 
   it('PATCH /api/tasks/:id updates a task title', async () => {
