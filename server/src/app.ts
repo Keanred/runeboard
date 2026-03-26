@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express from 'express';
+import express, { type ErrorRequestHandler } from 'express';
 import tasksRouter from './routes/tasks';
 
 export const app = express();
@@ -16,3 +16,11 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/tasks', tasksRouter);
+
+app.use(((err, _req, res, _next) => {
+  console.error(err);
+  const status = (err as { status?: number; statusCode?: number }).status
+    ?? (err as { status?: number; statusCode?: number }).statusCode
+    ?? 500;
+  res.status(status).json({ error: (err as Error).message ?? 'Internal server error' });
+}) as ErrorRequestHandler);

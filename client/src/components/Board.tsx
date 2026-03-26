@@ -38,8 +38,8 @@ export const Board = ({ onAddColumn }: BoardProps) => {
         tasks: tasks.filter((t: Task) => t.columnId === col.id),
       }));
       setTaskColumns(sortedColumns);
-    } catch {
-      setError('Failed to load tasks. Please refresh.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load tasks. Please refresh.');
     }
   }, []);
 
@@ -61,8 +61,8 @@ export const Board = ({ onAddColumn }: BoardProps) => {
         }
         return col;
       }));
-    } catch {
-      setError('Failed to add task. Please try again.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to add task. Please try again.');
     }
   };
 
@@ -85,9 +85,9 @@ export const Board = ({ onAddColumn }: BoardProps) => {
           return col;
         });
       });
-    } catch {
+    } catch (e) {
       await loadBoard();
-      setError('Failed to move task. Board was refreshed; please try again.');
+      setError(e instanceof Error ? e.message : 'Failed to move task. Board was refreshed; please try again.');
     }
   };
 
@@ -98,8 +98,8 @@ export const Board = ({ onAddColumn }: BoardProps) => {
         ...col,
         tasks: col.tasks.filter((task) => task.id !== taskId),
       })));
-    } catch {
-      setError('Failed to delete task. Please try again.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete task. Please try again.');
     }
   };
 

@@ -1,9 +1,18 @@
-import type { Task, Column } from '@runeboard/schemas';
+import type { Task, Column, ErrorResponse } from '@runeboard/schemas';
+
+async function parseApiError(response: Response, fallback: string): Promise<Error> {
+  try {
+    const body = (await response.json()) as ErrorResponse;
+    return new Error(body.error ?? fallback);
+  } catch {
+    return new Error(fallback);
+  }
+}
 
 export const getTasks = async (): Promise<{ columns: Column[], tasks: Task[] }>  => {
   const response = await fetch('/api/tasks');
   if (!response.ok) {
-    throw new Error('Failed to fetch tasks');
+    throw await parseApiError(response, 'Failed to fetch tasks');
   }
   return response.json();
 };
@@ -15,7 +24,7 @@ export const createTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'upda
     body: JSON.stringify(taskData),
   });
   if (!response.ok) {
-    throw new Error('Failed to create task');
+    throw await parseApiError(response, 'Failed to create task');
   }
   return response.json();
 };
@@ -27,8 +36,7 @@ export const updateTask = async (taskId: string, taskData: Partial<Omit<Task, 'i
     body: JSON.stringify(taskData),
   });
   if (!response.ok) {
-    const details = await response.text();
-    throw new Error(`Failed to update task (${response.status}): ${details}`);
+    throw await parseApiError(response, 'Failed to update task');
   }
   return response.json();
 }
@@ -38,7 +46,7 @@ export const deleteTask = async (taskId: string) => {
     method: 'DELETE',
   });
   if (!response.ok) {
-    throw new Error('Failed to delete task');
+    throw await parseApiError(response, 'Failed to delete task');
   }
   if (response.status === 204) {
     return null;

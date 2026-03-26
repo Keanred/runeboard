@@ -21,7 +21,8 @@ tasksRouter.post('/', (req: Request, res: Response) => {
   }
   const newTask = createTaskSchema.safeParse(req.body);
   if (!newTask.success) {
-    return res.status(400).json({ error: 'Invalid task data', details: newTask.error });
+    const message = newTask.error.issues.map((i) => i.message).join(', ');
+    return res.status(400).json({ error: `Invalid task data: ${message}` });
   }
   if (!getColumns().some((col) => col.id === newTask.data.columnId)) {
     return res.status(400).json({ error: 'Invalid columnId' });

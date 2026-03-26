@@ -54,3 +54,8 @@ export const BOARD_COLUMNS: Column[] = [
   { id: ColumnId.IN_PROGRESS, title: 'In Progress', order: 1 },
   { id: ColumnId.DONE, title: 'Done', order: 2 },
 ];
+
+export const ErrorResponseSchema = z.object({
+  error: z.string(),
+});
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
