@@ -3,7 +3,7 @@ import { ColumnId } from './types';
 import { CreateTaskInput, UpdateTaskInput, Task, Column } from '@runeboard/schemas';
 import { db } from './db/client';
 import { InsertTask, SelectColumn, SelectTask, tasks, columns } from './db/schema';
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 
 const toTask = (task: SelectTask): Task => ({
   ...task,
@@ -68,17 +68,24 @@ export const deleteTask = async (taskId: string): Promise<Task> => {
 };
 
 export const getTasksByColumn = async (columnId: ColumnId): Promise<Task[]> => {
-  const existingTasks = await db.select().from(tasks).where(eq(tasks.columnId, columnId));
+  const existingTasks = await db
+    .select()
+    .from(tasks)
+    .where(eq(tasks.columnId, columnId))
+    .orderBy(asc(tasks.order), asc(tasks.id));
   return existingTasks.map(toTask);
 };
 
 export const getColumns = async (): Promise<Column[]> => {
-  const existingColumns = await db.select().from(columns);
+  const existingColumns = await db.select().from(columns).orderBy(asc(columns.order), asc(columns.id));
   return existingColumns.map(toColumn);
 };
 
 export const getAllTasks = async (): Promise<Task[]> => {
-  const existingTasks = await db.select().from(tasks);
+  const existingTasks = await db
+    .select()
+    .from(tasks)
+    .orderBy(asc(tasks.columnId), asc(tasks.order), asc(tasks.id));
   return existingTasks.map(toTask);
 };
 

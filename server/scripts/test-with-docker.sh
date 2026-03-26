@@ -7,8 +7,13 @@ COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
 MODE="${1:-run}"
 
 cleanup() {
-  echo "Stopping test database..."
-  docker compose -f "$COMPOSE_FILE" stop postgres >/dev/null 2>&1 || true
+  echo "Resetting test database data..."
+  docker compose -f "$COMPOSE_FILE" exec -T postgres \
+    psql -U postgres -d runeboard -v ON_ERROR_STOP=1 -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" \
+    >/dev/null 2>&1 || true
+
+  echo "Cleaning up test database container..."
+  docker compose -f "$COMPOSE_FILE" down --remove-orphans >/dev/null 2>&1 || true
 }
 
 trap cleanup EXIT

@@ -1,16 +1,18 @@
 import { Request, Response, Router } from 'express';
-import { deleteTask, getAllTasks, getColumns, insertTask, updateTask } from '../store';
 import { Column, Task, createTaskSchema, updateTaskSchema } from '@runeboard/schemas';
+import {
+  createTask,
+  deleteTask,
+  getBoard,
+  updateTask,
+} from '../services/tasks';
+import { InvalidColumnIdError, TaskNotFoundError } from '../services/errors';
 
 const tasksRouter = Router();
 
 tasksRouter.get('/', async (_req: Request, res: Response<{ columns: Column[]; tasks: Task[] }>) => {
-  const columns: Column[] = await getColumns();
-  const tasks: Task[] = await getAllTasks();
-  return res.json({
-    columns,
-    tasks,
-  });
+  const board = await getBoard();
+  return res.json(board);
 });
 
 tasksRouter.post('/', async (req: Request, res: Response) => {
@@ -19,15 +21,17 @@ tasksRouter.post('/', async (req: Request, res: Response) => {
     const message = newTask.error.issues.map((i) => i.message).join(', ');
     return res.status(400).json({ error: `Invalid task data: ${message}` });
   }
-  const existingColumns = await getColumns();
-  if (!existingColumns.some((col) => col.id === newTask.data.columnId)) {
-    return res.status(400).json({ error: 'Invalid columnId' });
+
+  try {
+    const result: Task = await createTask(newTask.data);
+    res.status(201).json(result);
+  } catch (error) {
+    if (error instanceof InvalidColumnIdError) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    throw error;
   }
-  const result: Task = await insertTask(newTask.data);
-  if (!result) {
-    return res.status(400).json({ error: 'Failed to create task' });
-  }
-  res.status(201).json(result);
 });
 
 tasksRouter.patch('/:id', async (req: Request<{ id: string }>, res: Response) => {
@@ -39,20 +43,20 @@ tasksRouter.patch('/:id', async (req: Request<{ id: string }>, res: Response) =>
     return res.status(400).json({ error: `Invalid task data: ${message}` });
   }
   const updates = parsedUpdates.data;
-  const { columnId } = updates;
-
-  if (columnId) {
-    const existingColumns = await getColumns();
-    if (!existingColumns.some((col) => col.id === columnId)) {
-      return res.status(400).json({ error: 'Invalid columnId' });
-    }
-  }
 
   try {
     const result = await updateTask(id, updates);
     res.status(200).json(result);
-  } catch {
-    return res.status(404).json({ error: 'Task not found' });
+  } catch (error) {
+    if (error instanceof InvalidColumnIdError) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    if (error instanceof TaskNotFoundError) {
+      return res.status(404).json({ error: error.message });
+    }
+
+    throw error;
   }
 });
 
@@ -61,8 +65,12 @@ tasksRouter.delete('/:id', async (req: Request<{ id: string}>, res: Response) =>
 
   try {
     await deleteTask(id);
-  } catch {
-    return res.status(404).json({ error: 'Task not found' });
+  } catch (error) {
+    if (error instanceof TaskNotFoundError) {
+      return res.status(404).json({ error: error.message });
+    }
+
+    throw error;
   }
 
   res.status(204).end();

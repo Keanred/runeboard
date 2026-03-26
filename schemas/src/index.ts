@@ -6,7 +6,10 @@ export const ColumnIdSchema = z.string().trim().min(1).max(100);
 const Order = z.number().int().nonnegative();
 const TimestampSchema = z.string().datetime({ offset: true });
 const TaskTitleSchema = z.string().trim().min(1).max(200);
-const TaskDescriptionSchema = z.string().trim().min(1).max(4000);
+const TaskDescriptionSchema = z.string().trim().max(4000);
+const TaskDescriptionInputSchema = TaskDescriptionSchema.transform((value) => (
+  value.length === 0 ? undefined : value
+)).optional();
 
 export const TaskSchema = z.object({
   id: z.string(),
@@ -26,14 +29,14 @@ export const ColumnSchema = z.object({
 
 export const createTaskSchema = z.object({
   title: TaskTitleSchema,
-  description: TaskDescriptionSchema.optional(),
+  description: TaskDescriptionInputSchema,
   columnId: ColumnIdSchema.default('TODO'),
   order: Order.default(0),
 });
 
 export const updateTaskSchema = z.object({
   title: TaskTitleSchema.optional(),
-  description: TaskDescriptionSchema.optional(),
+  description: TaskDescriptionInputSchema,
   columnId: ColumnIdSchema.optional(),
   order: Order.optional(),
 });

@@ -2,6 +2,16 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { app } from '../app';
 
+const isNonDecreasing = <T>(items: T[], compare: (left: T, right: T) => number): boolean => {
+  for (let index = 1; index < items.length; index += 1) {
+    if (compare(items[index - 1], items[index]) > 0) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 describe('tasks routes', () => {
   it('GET /api/tasks returns columns and tasks', async () => {
     const res = await request(app).get('/api/tasks');
@@ -9,6 +19,24 @@ describe('tasks routes', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.columns)).toBe(true);
     expect(Array.isArray(res.body.tasks)).toBe(true);
+
+    expect(
+      isNonDecreasing(
+        res.body.columns,
+        (left, right) => left.order - right.order || left.id.localeCompare(right.id),
+      ),
+    ).toBe(true);
+
+    expect(
+      isNonDecreasing(
+        res.body.tasks,
+        (left, right) => (
+          left.columnId.localeCompare(right.columnId)
+          || left.order - right.order
+          || left.id.localeCompare(right.id)
+        ),
+      ),
+    ).toBe(true);
   });
 
   it('POST /api/tasks creates a task', async () => {
@@ -26,6 +54,16 @@ describe('tasks routes', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain('Invalid task data');
+  });
+
+  it('POST /api/tasks accepts empty description as optional', async () => {
+    const res = await request(app)
+      .post('/api/tasks')
+      .send({ title: 'No description task', description: '' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.title).toBe('No description task');
+    expect(res.body.description).toBeUndefined();
   });
 
   it('PATCH /api/tasks/:id updates a task title', async () => {
