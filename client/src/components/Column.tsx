@@ -6,6 +6,10 @@ import { ColumnHeader } from './ColumnHeader';
 import { TaskCard } from './TaskCard';
 import { TaskInitializeModalTrigger } from './TaskInitializeModal';
 
+const DropIndicator = () => (
+  <Box sx={{ height: 2, borderRadius: 1, bgcolor: 'primary.main', mx: 0.5, my: 0.5, flexShrink: 0 }} />
+);
+
 export type ColumnProps = {
   /** Column heading text */
   title: string;
@@ -20,7 +24,8 @@ export type ColumnProps = {
   /** Drop-zone callbacks for drag-and-drop support */
   onDragStart?: (taskId: string, fromColumnId: ColumnId, e: DragEvent) => void;
   onDragOver?: (e: DragEvent) => void;
-  onDrop?: (e: DragEvent) => void;
+  /** Called with the drop event and the target insertion index (0 = before first card). */
+  onDrop?: (e: DragEvent, toIndex: number) => void;
   onOpenTaskModal?: () => void;
 };
 
@@ -37,6 +42,7 @@ export const Column = ({
   onOpenTaskModal,
 }: ColumnProps) => {
   const [dragOver, setDragOver] = useState(false);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
 
   const getNextColumnId = (currentColumnId: ColumnId): ColumnId => {
     const stateTransitions: Record<string, ColumnId> = {
@@ -52,13 +58,21 @@ export const Column = ({
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
+        setDropIndex(tasks.length); // default: append; per-card handlers override
         onDragOver?.(e);
       }}
-      onDragLeave={() => setDragOver(false)}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setDragOver(false);
+          setDropIndex(null);
+        }
+      }}
       onDrop={(e) => {
         e.preventDefault();
         setDragOver(false);
-        onDrop?.(e);
+        const finalIndex = dropIndex ?? tasks.length;
+        setDropIndex(null);
+        onDrop?.(e, finalIndex);
       }}
       sx={{
         width: 320,
@@ -84,18 +98,32 @@ export const Column = ({
           },
         }}
       >
-        {tasks.map((task) => (
-          <TaskCard
+        {tasks.map((task, idx) => (
+          <Box
             key={task.id}
-            taskId={task.id}
-            title={task.title}
-            description={task.description}
-            variant={variant}
-            onMove={onMove ? () => onMove(task.id, task.columnId, getNextColumnId(task.columnId)) : undefined}
-            onDelete={onDelete}
-            onDragStart={onDragStart ? (e) => onDragStart(task.id, task.columnId, e) : undefined}
-          />
+            onDragOver={(e) => {
+              // Stop propagation so the column-level handler does not reset dropIndex to tasks.length
+              e.stopPropagation();
+              e.preventDefault();
+              setDragOver(true);
+              const rect = e.currentTarget.getBoundingClientRect();
+              setDropIndex(e.clientY < rect.top + rect.height / 2 ? idx : idx + 1);
+            }}
+          >
+            {dropIndex === idx && <DropIndicator />}
+            <TaskCard
+              key={task.id}
+              taskId={task.id}
+              title={task.title}
+              description={task.description}
+              variant={variant}
+              onMove={onMove ? () => onMove(task.id, task.columnId, getNextColumnId(task.columnId)) : undefined}
+              onDelete={onDelete}
+              onDragStart={onDragStart ? (e) => onDragStart(task.id, task.columnId, e) : undefined}
+            />
+          </Box>
         ))}
+        {dropIndex === tasks.length && <DropIndicator />}
         {showAdd && <TaskInitializeModalTrigger onClick={onOpenTaskModal} />}
       </Stack>
     </Box>

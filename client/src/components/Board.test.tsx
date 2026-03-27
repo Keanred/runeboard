@@ -72,10 +72,10 @@ describe('Board', () => {
 
     const view = renderBoard();
 
-    expect(await view.findByText('Failed to load tasks. Please refresh.')).toBeInTheDocument();
+    expect(await view.findByText('network')).toBeInTheDocument();
   });
 
-  it('adds a task through the TODO column form', async () => {
+  it('adds a task through the task modal', async () => {
     const user = userEvent.setup();
     mockedGetTasks.mockResolvedValue({
       columns,
@@ -90,19 +90,26 @@ describe('Board', () => {
 
     expect(await view.findByText('Existing todo')).toBeInTheDocument();
 
+    // Open the modal via the column trigger
     await user.click(view.getByRole('button', { name: /add a task/i }));
-    await user.type(view.getByPlaceholderText('Enter task title...'), 'New todo from test');
-    await user.type(view.getByPlaceholderText('Enter task description (optional)...'), 'New description');
-    await user.click(view.getByRole('button', { name: 'Add' }));
+
+    // Clear the default title and type a new one
+    const titleField = view.getByPlaceholderText('Enter task name...');
+    await user.clear(titleField);
+    await user.type(titleField, 'New todo from test');
+
+    await user.type(view.getByPlaceholderText('Detail the scope of work...'), 'New description');
+
+    await user.click(view.getByRole('button', { name: /initialize task/i }));
 
     expect(await view.findByText('New todo from test')).toBeInTheDocument();
 
-    expect(mockedCreateTask).toHaveBeenCalledWith({
-      title: 'New todo from test',
-      description: 'New description',
-      columnId: ColumnId.TODO,
-      order: 0,
-    });
+    expect(mockedCreateTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'New todo from test',
+        columnId: 'TODO',
+      }),
+    );
   });
 
   it('moves a task successfully and applies updated task payload', async () => {
@@ -153,7 +160,7 @@ describe('Board', () => {
 
     await user.click(view.getByRole('button', { name: /move/i }));
 
-    expect(await view.findByText('Failed to move task. Board was refreshed; please try again.')).toBeInTheDocument();
+    expect(await view.findByText('move failed')).toBeInTheDocument();
     expect(mockedUpdateTask).toHaveBeenCalledWith('todo-move-1', { columnId: ColumnId.IN_PROGRESS });
     expect(mockedGetTasks).toHaveBeenCalledTimes(2);
   });

@@ -1,9 +1,10 @@
 import { Request, Response, Router } from 'express';
-import { Column, Task, createTaskSchema, updateTaskSchema } from '@runeboard/schemas';
+import { Column, Task, createTaskSchema, reorderTaskSchema, updateTaskSchema } from '@runeboard/schemas';
 import {
   createTask,
   deleteTask,
   getBoard,
+  reorderTask,
   updateTask,
 } from '../services/tasks';
 import { InvalidColumnIdError, TaskNotFoundError } from '../services/errors';
@@ -74,6 +75,31 @@ tasksRouter.delete('/:id', async (req: Request<{ id: string}>, res: Response) =>
   }
 
   res.status(204).end();
+});
+
+tasksRouter.patch('/:id/reorder', async (req: Request<{ id: string }>, res: Response) => {
+  const { id } = req.params;
+
+  const parsed = reorderTaskSchema.safeParse(req.body);
+  if (!parsed.success) {
+    const message = parsed.error.issues.map((i) => i.message).join(', ');
+    return res.status(400).json({ error: `Invalid reorder data: ${message}` });
+  }
+
+  const { toIndex, toColumnId } = parsed.data;
+
+  try {
+    const result = await reorderTask(id, toIndex, toColumnId);
+    return res.status(200).json(result);
+  } catch (error) {
+    if (error instanceof InvalidColumnIdError) {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error instanceof TaskNotFoundError) {
+      return res.status(404).json({ error: error.message });
+    }
+    throw error;
+  }
 });
 
 export default tasksRouter;

@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
 import { DragEvent, useCallback, useEffect, useState } from 'react';
-import { createTask, deleteTask, getTasks, updateTask } from '../api';
+import { createTask, deleteTask, getTasks, reorderTask, updateTask } from '../api';
 import { ColumnId, Task } from '../types';
 import { Column } from './Column';
 import { TaskInitializeModal } from './TaskInitializeModal';
@@ -106,19 +106,64 @@ export const Board = ({ onAddColumn }: BoardProps) => {
     }
   }
 
+  const handleReorder = useCallback(
+    async (taskId: string, fromColumnId: ColumnId, toColumnId: ColumnId, visualToIndex: number) => {
+      const sourceCol = taskColumns.find((c) => c.id === fromColumnId);
+      const currentIndex = sourceCol?.tasks.findIndex((t) => t.id === taskId) ?? -1;
+
+      // Same-column no-op: dropping on the same slot or the adjacent one (net position unchanged)
+      if (
+        fromColumnId === toColumnId &&
+        (visualToIndex === currentIndex || visualToIndex === currentIndex + 1)
+      ) {
+        return;
+      }
+
+      // Translate visual index → server index (after removing the task from source)
+      const serverToIndex =
+        fromColumnId === toColumnId && visualToIndex > currentIndex
+          ? visualToIndex - 1
+          : visualToIndex;
+
+      // Optimistic update
+      setTaskColumns((prev) => {
+        const task = prev.find((c) => c.id === fromColumnId)?.tasks.find((t) => t.id === taskId);
+        if (!task) return prev;
+
+        const withoutTask = prev.map((col) =>
+          col.id === fromColumnId ? { ...col, tasks: col.tasks.filter((t) => t.id !== taskId) } : col,
+        );
+        return withoutTask.map((col) => {
+          if (col.id !== toColumnId) return col;
+          const newTasks = [...col.tasks];
+          newTasks.splice(Math.min(serverToIndex, newTasks.length), 0, { ...task, columnId: toColumnId });
+          return { ...col, tasks: newTasks };
+        });
+      });
+
+      try {
+        await reorderTask(taskId, serverToIndex, fromColumnId !== toColumnId ? toColumnId : undefined);
+      } catch (e) {
+        await loadBoard();
+        setError(e instanceof Error ? e.message : 'Failed to reorder task. Board was refreshed; please try again.');
+      }
+    },
+    [taskColumns, loadBoard],
+  );
+
   const dragHandler = (taskId: string, fromColumnId: ColumnId, e: DragEvent) => {
     const payload: TaskDrag = { taskId, fromColumnId };
     e.dataTransfer.setData(DRAG_MIME_TYPE, JSON.stringify(payload));
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDropToColumn = async (toColumnId: ColumnId, e: DragEvent) => {
+  const handleDropToColumn = async (toColumnId: ColumnId, e: DragEvent, toIndex: number) => {
     const raw = e.dataTransfer.getData(DRAG_MIME_TYPE);
     if (!raw) return;
     try {
       const payload = JSON.parse(raw) as TaskDrag;
-      if (!payload.taskId || payload.fromColumnId === toColumnId) return;
-      void handleMoveTask(payload.taskId, payload.fromColumnId, toColumnId);
+      if (!payload.taskId) return;
+      void handleReorder(payload.taskId, payload.fromColumnId, toColumnId, toIndex);
     } catch {
       await loadBoard();
       setError('Invalid drag data. Please try again.');
@@ -144,7 +189,7 @@ export const Board = ({ onAddColumn }: BoardProps) => {
           variant={col.id}
           showAdd={col.id === ColumnId.TODO ? true : false}
           onDragStart={dragHandler}
-          onDrop={(e) => handleDropToColumn(col.id, e)}
+          onDrop={(e, toIndex) => handleDropToColumn(col.id, e, toIndex)}
           onMove={handleMoveTask}
           onDelete={handleDeleteTask}
           onOpenTaskModal={() => setActiveTaskModal(true)}

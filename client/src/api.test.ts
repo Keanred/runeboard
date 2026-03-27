@@ -30,16 +30,13 @@ describe('api client', () => {
     );
   });
 
-  it('updateTask includes status and details in error message', async () => {
+  it('updateTask throws the server error message on failure', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
-      status: 404,
-      text: async () => '{"error":"Task not found"}',
+      json: async () => ({ error: 'Task not found' }),
     } as Response);
 
-    await expect(updateTask('missing-id', { title: 'Nope' })).rejects.toThrow(
-      'Failed to update task (404): {"error":"Task not found"}',
-    );
+    await expect(updateTask('missing-id', { title: 'Nope' })).rejects.toThrow('Task not found');
   });
 
   it('deleteTask returns null for 204 responses', async () => {

@@ -4,6 +4,7 @@ import {
     getAllTasks,
     getColumns,
     insertTask,
+    reorderTask as reorderTaskRecord,
     updateTask as updateTaskRecord,
 } from '../store';
 import { InvalidColumnIdError, TaskNotFoundError } from './errors';
@@ -55,6 +56,24 @@ export const deleteTask = async (id: string): Promise<void> => {
             throw new TaskNotFoundError();
         }
 
+        throw error;
+    }
+};
+
+export const reorderTask = async (
+    id: string,
+    toIndex: number,
+    toColumnId?: string,
+): Promise<Task> => {
+    if (toColumnId) {
+        await assertColumnExists(toColumnId);
+    }
+    try {
+        return await reorderTaskRecord(id, toIndex, toColumnId);
+    } catch (error) {
+        if (isStoreNotFoundError(error)) {
+            throw new TaskNotFoundError();
+        }
         throw error;
     }
 };

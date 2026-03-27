@@ -67,6 +67,60 @@ export const deleteTask = async (taskId: string): Promise<Task> => {
   return toTask(existingTask);
 };
 
+export const reorderTask = async (
+  taskId: string,
+  toIndex: number,
+  toColumnId?: string,
+): Promise<Task> => {
+  return db.transaction(async (tx) => {
+    const [taskToMove] = await tx.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+    if (!taskToMove) throw new Error('Task not found');
+
+    const fromColumnId = taskToMove.columnId;
+    const targetColumnId = toColumnId ?? fromColumnId;
+    const now = new Date().toISOString();
+
+    // Target column tasks sorted by order, with the moving task excluded
+    const targetTasks = await tx
+      .select()
+      .from(tasks)
+      .where(eq(tasks.columnId, targetColumnId))
+      .orderBy(asc(tasks.order), asc(tasks.id));
+    const filteredTarget = targetTasks.filter((t) => t.id !== taskId);
+
+    // Splice moving task in at clamped index
+    const clampedIndex = Math.min(Math.max(0, toIndex), filteredTarget.length);
+    filteredTarget.splice(clampedIndex, 0, taskToMove);
+
+    // Build order updates for the target column
+    const updates: Promise<unknown>[] = filteredTarget.map((t, i) =>
+      tx
+        .update(tasks)
+        .set({ order: i, columnId: targetColumnId, updatedAt: now })
+        .where(eq(tasks.id, t.id)),
+    );
+
+    // For cross-column moves, also resequence the source column
+    if (fromColumnId !== targetColumnId) {
+      const sourceTasks = await tx
+        .select()
+        .from(tasks)
+        .where(eq(tasks.columnId, fromColumnId))
+        .orderBy(asc(tasks.order), asc(tasks.id));
+      sourceTasks
+        .filter((t) => t.id !== taskId)
+        .forEach((t, i) => {
+          updates.push(tx.update(tasks).set({ order: i, updatedAt: now }).where(eq(tasks.id, t.id)));
+        });
+    }
+
+    await Promise.all(updates);
+
+    const [updated] = await tx.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+    return toTask(updated!);
+  });
+};
+
 export const getTasksByColumn = async (columnId: ColumnId): Promise<Task[]> => {
   const existingTasks = await db
     .select()

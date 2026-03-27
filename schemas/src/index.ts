@@ -41,10 +41,16 @@ export const updateTaskSchema = z.object({
   order: Order.optional(),
 });
 
+export const reorderTaskSchema = z.object({
+  toIndex: z.number().int().nonnegative(),
+  toColumnId: ColumnIdSchema.optional(),
+});
+
 export type Task = z.infer<typeof TaskSchema>;
 export type Column = z.infer<typeof ColumnSchema>;
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+export type ReorderTaskInput = z.infer<typeof reorderTaskSchema>;
 
 // Matches TypeScript enum usage (ColumnId.TODO, ColumnId.IN_PROGRESS, etc.)
 export const ColumnId = {

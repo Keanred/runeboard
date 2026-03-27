@@ -53,3 +53,19 @@ export const deleteTask = async (taskId: string) => {
   }
   return response.json();
 };
+
+export const reorderTask = async (
+  taskId: string,
+  toIndex: number,
+  toColumnId?: string,
+): Promise<Task> => {
+  const response = await fetch(`/api/tasks/${taskId}/reorder`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ toIndex, toColumnId }),
+  });
+  if (!response.ok) {
+    throw await parseApiError(response, 'Failed to reorder task');
+  }
+  return response.json();
+};
