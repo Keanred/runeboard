@@ -56,7 +56,6 @@ export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false,
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
         borderRadius: 3,
         transition: 'outline 0.2s',
         outline: dragOver ? '2px dashed' : '2px dashed transparent',
@@ -70,9 +69,10 @@ export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false,
       <Stack
         spacing={2}
         sx={{
-          flex: 1,
-          overflowY: 'auto',
           pr: 1,
+          '& > *': {
+            flexShrink: 0,
+          },
         }}
       >
         {tasks.map((task) => (

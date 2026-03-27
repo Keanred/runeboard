@@ -126,11 +126,10 @@ export const Board = ({ onAddColumn }: BoardProps) => {
     <Box
       sx={{
         display: 'flex',
+        alignItems: 'flex-start',
         gap: 4,
-        height: '100%',
         minWidth: 'max-content',
         p: 5,
-        overflowX: 'auto',
       }}
     >
       {

@@ -10,7 +10,7 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
       <SideNav />
       <TopNav />
 
@@ -23,6 +23,7 @@ export const Layout = ({ children }: LayoutProps) => {
           width: `calc(100% - ${SIDENAV_WIDTH}px)`,
           height: 'calc(100vh - 64px)',
           overflow: 'auto',
+          minHeight: 0,
           bgcolor: 'background.default',
         }}
       >
