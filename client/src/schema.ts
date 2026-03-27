@@ -6,10 +6,4 @@ export {
   createTaskSchema,
   updateTaskSchema,
 } from '@runeboard/schemas';
-export type {
-  Column,
-  CreateTaskInput,
-  Task,
-  UpdateTaskInput,
-} from '@runeboard/schemas';
-
+export type { Column, CreateTaskInput, Task, UpdateTaskInput } from '@runeboard/schemas';

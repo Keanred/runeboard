@@ -21,9 +21,17 @@ export type TaskCardProps = {
   onDelete?: (taskId: string) => void;
   /** Native drag-start forwarding */
   onDragStart?: (e: React.DragEvent) => void;
-}
+};
 
-export const TaskCard = ({ taskId, title, description, variant = ColumnId.TODO, onMove, onDelete, onDragStart }: TaskCardProps) => {
+export const TaskCard = ({
+  taskId,
+  title,
+  description,
+  variant = ColumnId.TODO,
+  onMove,
+  onDelete,
+  onDragStart,
+}: TaskCardProps) => {
   const isDone = variant === ColumnId.DONE;
 
   const borderColorMap: Record<string, string> = {

@@ -1,33 +1,36 @@
-import { ColumnId, Task } from '../types';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
-import { Column } from './Column';
+import { DragEvent, useCallback, useEffect, useState } from 'react';
 import { createTask, deleteTask, getTasks, updateTask } from '../api';
-import { useCallback, useEffect, useState, DragEvent } from 'react';
+import { ColumnId, Task } from '../types';
+import { Column } from './Column';
+import { TaskInitializeModal } from './TaskInitializeModal';
+import { CreateTaskInput } from '@runeboard/schemas';
 
 export type BoardProps = {
   /** Called when the trailing "add column" button is clicked */
   onAddColumn?: () => void;
-}
+};
 // sortedColumns type
 type SortedColumn = {
   id: ColumnId;
   title: string;
   tasks: Task[];
-}
+};
 type TaskDrag = {
   taskId: string;
   fromColumnId: ColumnId;
-}
+};
 
 const DRAG_MIME_TYPE = 'application/x-runeboard-task';
 
 export const Board = ({ onAddColumn }: BoardProps) => {
   const [taskColumns, setTaskColumns] = useState<SortedColumn[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [activeTaskModal, setActiveTaskModal] = useState(false);
 
   const loadBoard = useCallback(async () => {
     try {
@@ -44,27 +47,8 @@ export const Board = ({ onAddColumn }: BoardProps) => {
   }, []);
 
   useEffect(() => {
-    loadBoard();
+    void loadBoard();
   }, [loadBoard]);
-
-  const handleAddTask = async (title: string, description?: string) => {
-    try {
-      const newTask = await createTask({
-        title,
-        description: description ?? '',
-        columnId: ColumnId.TODO,
-        order: 0,
-      });
-      setTaskColumns((prev) => prev.map((col) => {
-        if (col.id === ColumnId.TODO) {
-          return { ...col, tasks: [newTask, ...col.tasks] };
-        }
-        return col;
-      }));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to add task. Please try again.');
-    }
-  };
 
   const handleMoveTask = async (taskId: string, from: ColumnId, to: ColumnId) => {
     try {
@@ -94,14 +78,33 @@ export const Board = ({ onAddColumn }: BoardProps) => {
   const handleDeleteTask = async (taskId: string) => {
     try {
       await deleteTask(taskId);
-      setTaskColumns((prev) => prev.map((col) => ({
-        ...col,
-        tasks: col.tasks.filter((task) => task.id !== taskId),
-      })));
+      setTaskColumns((prev) =>
+        prev.map((col) => ({
+          ...col,
+          tasks: col.tasks.filter((task) => task.id !== taskId),
+        })),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete task. Please try again.');
     }
   };
+
+  const onSubmitNewTask = async (task: CreateTaskInput) => {
+    try {
+      const result = await createTask(task);
+      setTaskColumns((prev) =>
+        prev.map((col) => {
+          if (col.id === result.columnId) {
+            return { ...col, tasks: [result, ...col.tasks] };
+          }
+          return col;
+        }),
+      );
+    setActiveTaskModal(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create task. Please try again.');
+    }
+  }
 
   const dragHandler = (taskId: string, fromColumnId: ColumnId, e: DragEvent) => {
     const payload: TaskDrag = { taskId, fromColumnId };
@@ -132,22 +135,21 @@ export const Board = ({ onAddColumn }: BoardProps) => {
         p: 5,
       }}
     >
-      {
-        taskColumns.map((col) => (
-          <Column
-            key={col.id}
-            title={col.title}
-            tasks={col.tasks}
-            variant={col.id}
-            showAdd={col.id === ColumnId.TODO ? true : false}
-            onAdd={(title: string, description?: string) => handleAddTask(title, description)}
-            onDragStart={dragHandler}
-            onDrop={(e) => handleDropToColumn(col.id, e)}
-            onMove={handleMoveTask}
-            onDelete={handleDeleteTask}
-          />
-        ))
-      }
+      <TaskInitializeModal open={activeTaskModal} onClose={() => setActiveTaskModal(false)} onSubmit={onSubmitNewTask} />
+      {taskColumns.map((col) => (
+        <Column
+          key={col.id}
+          title={col.title}
+          tasks={col.tasks}
+          variant={col.id}
+          showAdd={col.id === ColumnId.TODO ? true : false}
+          onDragStart={dragHandler}
+          onDrop={(e) => handleDropToColumn(col.id, e)}
+          onMove={handleMoveTask}
+          onDelete={handleDeleteTask}
+          onOpenTaskModal={() => setActiveTaskModal(true)}
+        />
+      ))}
       {/* Add Column Button */}
       <IconButton
         onClick={onAddColumn}

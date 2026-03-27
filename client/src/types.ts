@@ -6,5 +6,4 @@ export type NavItem = {
   icon: string;
   href: string;
   active?: boolean;
-}
-
+};

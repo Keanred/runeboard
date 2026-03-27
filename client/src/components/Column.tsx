@@ -1,11 +1,10 @@
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import { useState, DragEvent } from 'react';
-import { Task } from '../types';
-import { AddTaskForm } from './AddTaskForm';
+import { DragEvent, useState } from 'react';
+import { ColumnId, Task } from '../types';
 import { ColumnHeader } from './ColumnHeader';
 import { TaskCard } from './TaskCard';
-import { ColumnId } from '../types';
+import { TaskInitializeModalTrigger } from './TaskInitializeModal';
 
 export type ColumnProps = {
   /** Column heading text */
@@ -14,19 +13,29 @@ export type ColumnProps = {
   tasks: Task[];
   /** Visual variant applied to every TaskCard in this column */
   variant?: ColumnId;
-  /** Show the "+" add button in the header and the AddTaskForm at the bottom */
+  /** Show the add-task trigger at the bottom of the column */
   showAdd?: boolean;
-  /** Called when a task is submitted via the add form */
-  onAdd?: (title: string, description?: string) => void;
   onMove?: (taskId: string, from: ColumnId, to: ColumnId) => void;
   onDelete?: (taskId: string) => void;
   /** Drop-zone callbacks for drag-and-drop support */
   onDragStart?: (taskId: string, fromColumnId: ColumnId, e: DragEvent) => void;
   onDragOver?: (e: DragEvent) => void;
   onDrop?: (e: DragEvent) => void;
-}
+  onOpenTaskModal?: () => void;
+};
 
-export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false, onAdd, onMove, onDelete, onDragStart, onDragOver, onDrop }: ColumnProps) => {
+export const Column = ({
+  title,
+  tasks,
+  variant = ColumnId.TODO,
+  showAdd = false,
+  onMove,
+  onDelete,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onOpenTaskModal,
+}: ColumnProps) => {
   const [dragOver, setDragOver] = useState(false);
 
   const getNextColumnId = (currentColumnId: ColumnId): ColumnId => {
@@ -87,7 +96,7 @@ export const Column = ({ title, tasks, variant = ColumnId.TODO, showAdd = false,
             onDragStart={onDragStart ? (e) => onDragStart(task.id, task.columnId, e) : undefined}
           />
         ))}
-        {showAdd && <AddTaskForm onSubmit={onAdd} />}
+        {showAdd && <TaskInitializeModalTrigger onClick={onOpenTaskModal} />}
       </Stack>
     </Box>
   );

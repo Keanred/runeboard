@@ -13,7 +13,7 @@ export type ColumnHeaderProps = {
   showAdd?: boolean;
   /** Called when the "+" header button is clicked */
   onAdd?: () => void;
-}
+};
 
 export const ColumnHeader = ({ title, count, showAdd = false, onAdd }: ColumnHeaderProps) => {
   return (

@@ -25,9 +25,9 @@ describe('api client', () => {
       ok: false,
     } as Response);
 
-    await expect(
-      createTask({ title: 'Bad', description: '', columnId: ColumnId.TODO, order: 0 }),
-    ).rejects.toThrow('Failed to create task');
+    await expect(createTask({ title: 'Bad', description: '', columnId: ColumnId.TODO, order: 0 })).rejects.toThrow(
+      'Failed to create task',
+    );
   });
 
   it('updateTask includes status and details in error message', async () => {

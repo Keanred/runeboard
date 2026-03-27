@@ -1,4 +1,4 @@
-import type { Task, Column, ErrorResponse } from '@runeboard/schemas';
+import type { Column, ErrorResponse, Task } from '@runeboard/schemas';
 
 async function parseApiError(response: Response, fallback: string): Promise<Error> {
   try {
@@ -9,7 +9,7 @@ async function parseApiError(response: Response, fallback: string): Promise<Erro
   }
 }
 
-export const getTasks = async (): Promise<{ columns: Column[], tasks: Task[] }>  => {
+export const getTasks = async (): Promise<{ columns: Column[]; tasks: Task[] }> => {
   const response = await fetch('/api/tasks');
   if (!response.ok) {
     throw await parseApiError(response, 'Failed to fetch tasks');
@@ -39,7 +39,7 @@ export const updateTask = async (taskId: string, taskData: Partial<Omit<Task, 'i
     throw await parseApiError(response, 'Failed to update task');
   }
   return response.json();
-}
+};
 
 export const deleteTask = async (taskId: string) => {
   const response = await fetch(`/api/tasks/${taskId}`, {
